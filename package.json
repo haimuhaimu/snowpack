@@ -6,7 +6,8 @@
   "description": "A mobile-first ski packing checklist and gear outfit canvas",
   "scripts": {
     "test": "node --test",
-    "dev": "python3 -m http.server 8080 --directory docs"
+    "dev": "python3 -m http.server 8081 --bind 127.0.0.1 --directory docs",
+    "prepare:server": "node scripts/prepare-sync-server.mjs"
   },
   "engines": {
     "node": ">=22"

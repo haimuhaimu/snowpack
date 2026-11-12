@@ -3,3 +3,7 @@ node_modules/
 qa/
 *.log
 .openai/
+
+.env
+.env.*
+.vercel/
