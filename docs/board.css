@@ -26,4 +26,9 @@
 
 /* Keep alpine toolbar labels and counts on one line on compact phones. */
 .board-top-actions .board-tool,.board-title strong small{white-space:nowrap}
+.board-pack-selection{margin-left:auto;min-height:44px;padding-inline:14px;flex-shrink:0;background:var(--selected);color:var(--accent);font-weight:550;white-space:nowrap}
+@media(max-width:600px){.board-inspector .board-pack-selection{grid-column:1/-1;order:3;width:100%;margin-left:0}}
 @media(max-width:350px){.board-top-actions .shelf-toggle svg{display:none}.board-toolbar{gap:8px;padding-inline:12px}.board-shell.is-fullscreen .board-title strong{font-size:13px}.board-title strong small{margin-left:4px}}
+/* A collapsed phone board must keep an editable canvas when actions wrap. */
+@media(max-width:600px){.board-shell:not(.is-fullscreen){height:auto;min-height:0}.board-shell:not(.is-fullscreen) .board-layout{flex:none;height:clamp(260px,48dvh,510px);min-height:260px}.board-shell:not(.is-fullscreen) .board-viewport{min-height:260px}}
+@media(max-width:350px){.board-workflow{gap:4px;padding-inline:10px}.board-workflow .board-select-mode{padding-inline:6px;font-size:10px}.board-history{padding-left:3px}.board-history .board-tool{min-width:31px;padding:5px}.board-save-outfit{padding-inline:9px;font-size:10px}}

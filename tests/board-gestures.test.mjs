@@ -4,16 +4,17 @@ import {mountBoard,requestBoardFit} from '../docs/board.mjs';
 
 // A DOM/scheduler boundary for the real mounted handlers. This does not model
 // browser layout, physical touch, image decoding, or native pointer capture.
-function harness(t,{saveSucceeds=true}={}) {
+function harness(t,{saveSucceeds=true,pieceCount=1}={}) {
  const frames=new Map();let nextFrame=0,rectReads=0,pieceWrites=0,saves=0,lastSaveOptions;
+ const packCalls=[];let outfitSaves=0;
  const globals=['document','ResizeObserver','CSS','requestAnimationFrame','cancelAnimationFrame'];
  const old=new Map(globals.map(key=>[key,Object.getOwnPropertyDescriptor(globalThis,key)]));
  const element=(dataset={})=>{
   const listeners=new Map(),classes=new Set(),attributes=new Map(),children=new Map(),captures=new Set();
   const node={dataset,style:{},clientWidth:1600,clientHeight:1100,
    classList:{toggle(key,on){if(on===undefined)on=!classes.has(key);on?classes.add(key):classes.delete(key);},add:key=>classes.add(key),remove:key=>classes.delete(key)},
-   setAttribute:(key,value)=>attributes.set(key,value),querySelector(selector){if(!children.has(selector))children.set(selector,element());return children.get(selector);},querySelectorAll:()=>[],
-   closest:selector=>selector==='[data-piece]'&&dataset.piece?node:null,
+   setAttribute:(key,value)=>attributes.set(key,value),querySelector(selector){if(!children.has(selector)){const board=selector.match(/^\[data-board=([^\]]+)\]$/)?.[1];children.set(selector,element(board?{board}:{}));}return children.get(selector);},querySelectorAll:()=>[],
+   closest:selector=>selector==='button'||selector==='[data-piece]'&&dataset.piece?node:null,
    addEventListener(type,fn,options){if(!listeners.has(type))listeners.set(type,[]);listeners.get(type).push(fn);options?.signal?.addEventListener('abort',()=>listeners.set(type,listeners.get(type).filter(value=>value!==fn)),{once:true});},
    emit(type,event){for(const fn of listeners.get(type)||[])fn({button:0,pointerType:'touch',pointerId:1,target:node,preventDefault(){},...event});},
    focus(){document.activeElement=node;},contains:target=>target===node,
@@ -21,23 +22,25 @@ function harness(t,{saveSucceeds=true}={}) {
    getBoundingClientRect(){rectReads++;return {left:10,top:20};},
   };return node;
  };
- const shell=element(),viewport=element(),world=element(),piece=element({piece:'p'}),inspectorInputs=new Map();
+ const shell=element(),viewport=element(),world=element(),piece=element({piece:'p'}),inspectorInputs=new Map(),inspectorButtons=new Map();
+ const pieces=[piece,...Array.from({length:pieceCount-1},(_,i)=>element({piece:`p${i+1}`}))];
  piece.style=new Proxy({left:'800px',top:'550px'},{set(object,key,value){pieceWrites++;object[key]=value;return true;}});
  const otherQuery=shell.querySelector.bind(shell);
- shell.querySelector=selector=>selector==='.board-viewport'?viewport:selector==='.board-world'?world:inspectorInputs.get(selector)||otherQuery(selector);
- shell.contains=target=>[shell,viewport,world,piece,...inspectorInputs.values()].includes(target);
- Object.defineProperty(shell.querySelector('#board-inspector'),'innerHTML',{set(value){inspectorInputs.clear();for(const key of ['scale','rotation']){const match=value.match(new RegExp(`data-adjust="${key}"[^>]*value="([^"]+)"`));if(match){const input=element({adjust:key});input.value=match[1];inspectorInputs.set(`[data-adjust="${key}"]`,input);}}}});
- world.querySelector=()=>piece;world.querySelectorAll=()=>[piece];
+ shell.querySelector=selector=>selector==='.board-viewport'?viewport:selector==='.board-world'?world:inspectorInputs.get(selector)||inspectorButtons.get(selector)||otherQuery(selector);
+ shell.contains=target=>[shell,viewport,world,...pieces,...inspectorInputs.values(),...inspectorButtons.values()].includes(target);
+ Object.defineProperty(shell.querySelector('#board-inspector'),'innerHTML',{set(value){inspectorInputs.clear();inspectorButtons.clear();for(const key of ['scale','rotation']){const match=value.match(new RegExp(`data-adjust="${key}"[^>]*value="([^"]+)"`));if(match){const input=element({adjust:key});input.value=match[1];inspectorInputs.set(`[data-adjust="${key}"]`,input);}}for(const match of value.matchAll(/<button\b([^>]*)>/g)){const action=match[1].match(/data-board="([^"]+)"/)?.[1];if(action){const button=element({board:action});button.disabled=/\sdisabled(?:\s|$|=)/.test(match[1]);inspectorButtons.set(`[data-board=${action}]`,button);}}}});
+ world.querySelector=selector=>pieces.find(p=>selector?.includes(`"${p.dataset.piece}"`))||piece;world.querySelectorAll=()=>pieces;
  const root={querySelector:selector=>selector==='.board-shell'?shell:null};
  Object.assign(globalThis,{document:{body:{style:{}},activeElement:null,querySelector:()=>null},ResizeObserver:class{observe(){}disconnect(){}},CSS:{escape:value=>value},requestAnimationFrame:callback=>{frames.set(++nextFrame,callback);return nextFrame;},cancelAnimationFrame:id=>frames.delete(id)});
  const flush=()=>{const pending=[...frames.values()];frames.clear();pending.forEach(fn=>fn());};
- let state={wardrobe:[{id:'g',name:'外套',category:'jacket',color:'black'}],board:{background:'paper',pieces:[{id:'p',garmentId:'g',x:800,y:550,scale:1,rotation:0,z:0}]}};
+ let state={wardrobe:pieces.map((p,i)=>({id:i?`g${i}`:'g',name:'外套',category:'jacket',color:'black'})),board:{background:'paper',pieces:pieces.map((p,i)=>({id:p.dataset.piece,garmentId:i?`g${i}`:'g',x:800,y:550,scale:1,rotation:0,z:i}))}};
  requestBoardFit({resetSelection:true});
- const cleanup=mountBoard(root,{getState:()=>state,save:(next,message,options)=>{saves++;lastSaveOptions=options;if(saveSucceeds)state=next;return saveSucceeds;},getHistoryState:()=>({canUndoBoard:saveSucceeds&&saves>0,canRedoBoard:false})});
+ const cleanup=mountBoard(root,{getState:()=>state,save:(next,message,options)=>{saves++;lastSaveOptions=options;if(saveSucceeds)state=next;return saveSucceeds;},packGarments:ids=>packCalls.push(ids),saveOutfit:()=>{outfitSaves++;},getHistoryState:()=>({canUndoBoard:saveSucceeds&&saves>0,canRedoBoard:false})});
  flush();pieceWrites=0;rectReads=0;
  t.after(()=>{cleanup();for(const [key,descriptor] of old){if(descriptor)Object.defineProperty(globalThis,key,descriptor);else delete globalThis[key];}});
  const send=(type,x,y=100,extra={})=>viewport.emit(type,{clientX:x,clientY:y,target:piece,...extra});
- return {send,flush,cleanup,piece,world,shell,get state(){return state;},get saves(){return saves;},get lastSaveOptions(){return lastSaveOptions;},get writes(){return pieceWrites;},get rectReads(){return rectReads;},get pendingFrames(){return frames.size;}};
+ const click=target=>{shell.emit('pointerdown',{target});shell.emit('click',{target});};
+ return {send,flush,cleanup,piece,world,shell,clickPiece:index=>click(pieces[index]),clickAction:action=>click(shell.querySelector(`[data-board=${action}]`)),get packButton(){return inspectorButtons.get('[data-board=pack-garments]');},get packCalls(){return packCalls;},get outfitSaves(){return outfitSaves;},get state(){return state;},get saves(){return saves;},get lastSaveOptions(){return lastSaveOptions;},get writes(){return pieceWrites;},get rectReads(){return rectReads;},get pendingFrames(){return frames.size;}};
 }
 
 test('同一帧内多次拖动只绘制最新位置，拖动期间不保存或反复读取画布边界',t=>{
@@ -110,4 +113,23 @@ test('失败的滑块保存恢复控件原值和焦点，不启用撤销',t=>{
  const restored=h.shell.querySelector('[data-adjust="scale"]');
  assert.equal(restored.value,'1');assert.equal(document.activeElement,restored);
  assert.equal(h.state.board.pieces[0].scale,1);assert.equal(h.shell.querySelector('[data-board=undo]').disabled,true);
+});
+
+test('画板单选直接加入清单只传当前装备，不保存搭配或布局',t=>{
+ const h=harness(t,{pieceCount:2});
+ assert.equal(h.packButton,undefined);
+ h.clickPiece(1);assert.ok(h.packButton);assert.equal(h.packButton.disabled,false);
+ h.clickAction('pack-garments');assert.deepEqual(h.packCalls,[['g1']]);
+ assert.equal(h.outfitSaves,0);assert.equal(h.saves,0);
+});
+
+test('画板多选加入所选装备，空选禁用且超过搭配数量限制仍可直接加入清单',t=>{
+ const h=harness(t,{pieceCount:31});h.clickAction('multi-select');
+ assert.ok(h.packButton);assert.equal(h.packButton.disabled,true);h.clickAction('pack-garments');assert.deepEqual(h.packCalls,[]);
+ h.clickPiece(0);h.clickPiece(1);assert.equal(h.packButton.disabled,false);
+ h.clickAction('pack-garments');assert.deepEqual(h.packCalls,[['g','g1']]);
+ h.clickAction('select-all');assert.equal(h.packButton.disabled,false);assert.equal(h.shell.querySelector('[data-board=save-outfit]').disabled,true);
+ h.clickAction('pack-garments');assert.equal(h.packCalls[1].length,31);
+ h.clickAction('clear-selection');assert.equal(h.packButton.disabled,true);h.clickAction('pack-garments');assert.equal(h.packCalls.length,2);
+ assert.equal(h.outfitSaves,0);assert.equal(h.saves,0);
 });

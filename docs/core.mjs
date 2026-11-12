@@ -188,30 +188,38 @@ export function addCustomItem(state,{name,category,qty=1},remember=true) {
   const changed = mapCurrentTrip(state,trip=>({...trip,items:[...trip.items,item]}));
   return remember ? rememberItem(changed,item) : changed;
 }
-export function addOutfitToTrip(state,outfitId) {
-  const outfit = state.outfits.find(entry=>entry.id===outfitId);
+export function addGarmentsToTrip(state,garmentIds) {
   const trip=getActiveTrip(state);
-  if (!outfit || !trip) return state;
-  const garments = outfit.garmentIds.map(id=>state.wardrobe.find(g=>g.id===id)).filter(Boolean);
+  if (!trip || !Array.isArray(garmentIds)) return state;
+  const wardrobe=new Map(state.wardrobe.map(garment=>[garment.id,garment]));
+  const garments=[...new Set(garmentIds)].map(id=>wardrobe.get(id)).filter(Boolean);
+  if (!garments.length) return state;
   const existingGarments=new Set(trip.items.map(item=>item.wardrobeId));
   if (trip.items.length+garments.filter(garment=>!existingGarments.has(garment.id)).length>600) return state;
   const slots = new Set(garments.map(g=>g.category));
   const selectedGarments = new Set(garments.map(g=>g.id));
-  return mapCurrentTrip(state,trip=>{
-    const existing = new Set(trip.items.map(item=>item.wardrobeId).filter(Boolean));
-    // Adding never silently removes another real garment or a confirmed packed item.
-    const items = trip.items.map(item=>{
-      if (selectedGarments.has(item.wardrobeId) && item.status==='skip') return {...item,status:'pending'};
-      const slot=item.slot || GEAR_CATALOG.find(entry=>entry.key===item.templateKey)?.slot;
-      return item.source==='template' && slots.has(slot) && !READY.has(item.status) ? {...item,status:'skip'} : item;
-    });
-    for (const garment of garments) {
-      if (existing.has(garment.id)) continue;
-      existing.add(garment.id);
-      items.push({id:uid('item'),name:garment.name,category:EQUIPMENT_CATEGORIES[garment.category] || '穿戴',slot:garment.category,qty:1,status:'pending',source:'wardrobe',wardrobeId:garment.id,fromOutfit:true});
-    }
-    return {...trip,items};
+  let changed=false;
+  // Adding never silently removes another real garment or a confirmed packed item.
+  const items = trip.items.map(item=>{
+    if (selectedGarments.has(item.wardrobeId) && item.status==='skip') {changed=true;return {...item,status:'pending'};}
+    const slot=item.slot || GEAR_CATALOG.find(entry=>entry.key===item.templateKey)?.slot;
+    if (item.source==='template' && slots.has(slot) && !READY.has(item.status) && item.status!=='skip') {changed=true;return {...item,status:'skip'};}
+    return item;
   });
+  for (const garment of garments) {
+    if (existingGarments.has(garment.id)) continue;
+    changed=true;
+    items.push({id:uid('item'),name:garment.name,category:EQUIPMENT_CATEGORIES[garment.category] || '穿戴',slot:garment.category,qty:1,status:'pending',source:'wardrobe',wardrobeId:garment.id});
+  }
+  return changed?mapCurrentTrip(state,trip=>({...trip,items})):state;
+}
+export function addOutfitToTrip(state,outfitId) {
+  const outfit=state.outfits.find(entry=>entry.id===outfitId);
+  if (!outfit) return state;
+  const next=addGarmentsToTrip(state,outfit.garmentIds);
+  if (next===state) return state;
+  const previousIds=new Set(getActiveTrip(state).items.map(item=>item.id));
+  return mapCurrentTrip(next,trip=>({...trip,items:trip.items.map(item=>previousIds.has(item.id)?item:{...item,fromOutfit:true})}));
 }
 
 export function getBoard(state) {
