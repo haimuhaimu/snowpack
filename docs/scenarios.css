@@ -1,0 +1,16 @@
+dialog[open]:has(#scenario-form){width:min(620px,calc(100% - 28px));height:min(790px,calc(100dvh - 30px));display:flex;flex-direction:column;overflow:hidden}
+dialog:has(#scenario-form) .modal-header{flex-shrink:0;margin-bottom:12px}
+dialog:has(#scenario-form) #modal-content{min-height:0;flex:1}
+#scenario-form{display:flex;flex-direction:column;height:100%}
+.scenario-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:16px 0 18px}
+.scenario-tab{border:1px solid var(--line);border-radius:13px;min-height:44px;text-align:left;padding:11px 13px;font-size:13px;background:var(--surface);color:var(--muted)}
+.scenario-tab.active{border-color:var(--accent);background:var(--selected);color:var(--accent);font-weight:650}
+.scenario-tab>span{min-width:0;overflow-wrap:anywhere}
+.scenario-description{padding:0 2px 12px}.scenario-description h3{font-size:15px;margin:0 0 5px}.scenario-description p{font-size:12px;color:var(--muted);line-height:1.65;margin:0}
+.scenario-list{min-height:70px;overflow:auto;overscroll-behavior:contain;flex:1;border:1px solid var(--line-soft);border-radius:15px;scrollbar-gutter:stable}
+.scenario-list .catalog-option:first-child{border-top:0}.scenario-list .catalog-option input:disabled{opacity:.3}
+.scenario-footer{flex-shrink:0;padding-top:8px}.scenario-selection{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted)}
+.scenario-selection .text-button{font-size:12px;min-height:36px}.scenario-footer .full-button{margin:4px 0 8px}.scenario-footer .form-note{margin:0;font-size:11px;line-height:1.65}
+@media(max-width:600px){dialog[open]:has(#scenario-form){padding:18px 16px}.scenario-tabs{margin:12px 0;gap:6px}.scenario-tab{font-size:12px;padding:10px}.scenario-description p{font-size:11px}.scenario-footer .form-note{font-size:10px}}
+@media(max-height:600px){dialog[open]:has(#scenario-form){height:calc(100dvh - 16px);max-height:calc(100dvh - 16px);padding:12px 16px}dialog:has(#scenario-form) .modal-header{margin-bottom:6px}dialog:has(#scenario-form) .modal-header h2{font-size:18px}#scenario-form>.small-note,.scenario-description,.scenario-footer .form-note{display:none}.scenario-tabs{grid-template-columns:repeat(4,minmax(0,1fr));margin:0 0 8px}.scenario-tab{text-align:center;min-height:38px;padding:7px 5px;font-size:11px}.scenario-footer{padding-top:4px}.scenario-selection .text-button{min-height:28px}.scenario-footer .full-button{min-height:38px;padding:8px;margin:0}}
+@media(max-height:600px) and (max-width:480px){.scenario-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}.scenario-tab{min-height:40px}}

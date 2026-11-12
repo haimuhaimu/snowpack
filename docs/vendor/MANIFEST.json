@@ -1,0 +1,42 @@
+[
+  {
+    "path": "vendor/licenses/ORT-LICENSE.txt",
+    "bytes": 1073,
+    "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c"
+  },
+  {
+    "path": "vendor/licenses/ORT-ThirdPartyNotices.txt",
+    "bytes": 316114,
+    "sha256": "8c06e8cff286a4a117b3b246a4c7da68428a144af757823db50e3d6520941ec6"
+  },
+  {
+    "path": "vendor/licenses/REMBG-LICENSE.txt",
+    "bytes": 1069,
+    "sha256": "90a3215072968fd304669c5389f04f1274a587abdd0507d99dead0f5511f8999"
+  },
+  {
+    "path": "vendor/licenses/U2NET-LICENSE.txt",
+    "bytes": 11357,
+    "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+  },
+  {
+    "path": "vendor/models/u2netp.onnx",
+    "bytes": 4574861,
+    "sha256": "309c8469258dda742793dce0ebea8e6dd393174f89934733ecc8b14c76f4ddd8"
+  },
+  {
+    "path": "vendor/ort/ort-wasm-simd-threaded.mjs",
+    "bytes": 26583,
+    "sha256": "e9ba2350c370278fc90108f1514fb9ce6a4051341ab977b5b0dca7eca9e78dfa"
+  },
+  {
+    "path": "vendor/ort/ort-wasm-simd-threaded.wasm",
+    "bytes": 12666427,
+    "sha256": "06b3f98e5aa2fffec1e3ac57a48bf1073828c6624e14d210750bc596c2e35d65"
+  },
+  {
+    "path": "vendor/ort/ort.wasm.min.mjs",
+    "bytes": 46517,
+    "sha256": "5118f6b62b123b74a7af80dccd6dc96d3651a39d02b37edfc0d9831982f1f898"
+  }
+]

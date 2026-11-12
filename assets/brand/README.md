@@ -1,0 +1,5 @@
+# Snowpack cartoon ski buddy
+
+Created 2026-11-12 with the built-in image generation tool for a cartoon ski identity. Original: `ski-buddy-original.png`. Served assets: `docs/brand-ski-buddy.png` (128px) and `docs/favicon-ski-buddy.png` (64px); alpha retained, only resized for delivery with macOS sips. Generated art was not copied from the searched third-party mascots. The original is outside docs and not shipped.
+
+Prompt: One original cartoon mascot head for a friendly personal ski packing app. Cute rounded snowball face, chunky raspberry-magenta ski helmet (#b52670), oversized icy-cyan goggles with dark plum frame, small cheeky smile, warm white face and subtle rosy cheeks. Playful freestyle ski culture, charming rather than babyish. Head only, bold simple shapes and clean outlines, limited colors and minimal shading, readable at 34px. Centered and nearly fills square with clear padding. Transparent outside the silhouette; no badge, scenery, text, watermark, existing brand or copyrighted character.
